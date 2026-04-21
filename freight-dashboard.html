@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frustrated Freight Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1e;font-family:Segoe UI,Arial,sans-serif;padding:20px;color:#fff}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:0.5px solid rgba(255,255,255,0.1)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:#378ADD}
+.logo-text{font-size:16px;font-weight:500;letter-spacing:0.5px}
+.badge{font-size:11px;background:rgba(55,138,221,0.15);color:#85B7EB;padding:4px 10px;border-radius:20px;border:0.5px solid rgba(55,138,221,0.3)}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:#111827;border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.kpi-accent{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.kpi-label{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.kpi-value{font-size:28px;font-weight:500;color:#fff;line-height:1}
+.kpi-sub{font-size:11px;margin-top:6px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-card{background:#111827;border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px}
+.chart-full{background:#111827;border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:12px}
+.chart-title{font-size:12px;font-weight:500;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{font-size:12px;color:rgba(255,255,255,0.6);width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.bar-track{flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-count{font-size:12px;color:rgba(255,255,255,0.45);width:24px;text-align:right;flex-shrink:0}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.status-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center}
+.status-dot{width:8px;height:8px;border-radius:50%;margin:0 auto 6px}
+.status-name{font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px}
+.status-num{font-size:20px;font-weight:500;color:#fff}
+.table-card{background:#111827;border:0.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px}
+.table-header{display:grid;grid-template-columns:60px 1fr 1fr 1fr 110px;gap:8px;padding:0 0 10px;border-bottom:0.5px solid rgba(255,255,255,0.08);margin-bottom:8px}
+.th{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px}
+.table-row{display:grid;grid-template-columns:60px 1fr 1fr 1fr 110px;gap:8px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.05)}
+.td{font-size:12px;color:rgba(255,255,255,0.7);display:flex;align-items:center}
+.overdue-badge{background:rgba(226,75,74,0.15);color:#F09595;font-size:10px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(226,75,74,0.3)}
+.loading{font-size:12px;color:rgba(255,255,255,0.3);padding:12px 0}
+.error{font-size:12px;color:#F09595;padding:12px 0}
+.refresh-btn{font-size:11px;background:rgba(55,138,221,0.15);color:#85B7EB;padding:4px 10px;border-radius:20px;border:0.5px solid rgba(55,138,221,0.3);cursor:pointer}
+.refresh-btn:hover{background:rgba(55,138,221,0.25)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span class="logo-text">Frustrated Freight — Operations Dashboard</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="badge" id="last-updated">Loading...</span>
+    <button class="refresh-btn" onclick="loadData()">Refresh</button>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-accent" style="background:#378ADD"></div><div class="kpi-label">Total Issues</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub" style="color:rgba(255,255,255,0.35)">All time</div></div>
+  <div class="kpi"><div class="kpi-accent" style="background:#EF9F27"></div><div class="kpi-label">Open Issues</div><div class="kpi-value" id="kpi-open">—</div><div class="kpi-sub" style="color:#EF9F27">Awaiting action</div></div>
+  <div class="kpi"><div class="kpi-accent" style="background:#639922"></div><div class="kpi-label">Resolved</div><div class="kpi-value" id="kpi-resolved">—</div><div class="kpi-sub" style="color:#639922">Closed</div></div>
+  <div class="kpi"><div class="kpi-accent" style="background:#E24B4A"></div><div class="kpi-label">Overdue</div><div class="kpi-value" id="kpi-overdue">—</div><div class="kpi-sub" style="color:#E24B4A">Over 48 hours</div></div>
+</div>
+
+<div class="chart-card" style="margin-bottom:12px">
+  <div class="chart-title">Issues by status</div>
+  <div class="status-grid">
+    <div class="status-item"><div class="status-dot" style="background:#378ADD"></div><div class="status-name">Sent</div><div class="status-num" id="s-sent">—</div></div>
+    <div class="status-item"><div class="status-dot" style="background:#888780"></div><div class="status-name">Logged</div><div class="status-num" id="s-logged">—</div></div>
+    <div class="status-item"><div class="status-dot" style="background:#EF9F27"></div><div class="status-name">Store Action</div><div class="status-num" id="s-store">—</div></div>
+    <div class="status-item"><div class="status-dot" style="background:#7F77DD"></div><div class="status-name">In Progress</div><div class="status-num" id="s-progress">—</div></div>
+    <div class="status-item"><div class="status-dot" style="background:#1D9E75"></div><div class="status-name">Store Responded</div><div class="status-num" id="s-responded">—</div></div>
+    <div class="status-item"><div class="status-dot" style="background:#639922"></div><div class="status-name">Resolved</div><div class="status-num" id="s-resolved">—</div></div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card"><div class="chart-title">Issues by department</div><div id="dept-bars"><div class="loading">Loading...</div></div></div>
+  <div class="chart-card"><div class="chart-title">Issues by vendor</div><div id="vendor-bars"><div class="loading">Loading...</div></div></div>
+</div>
+
+<div class="chart-full"><div class="chart-title">Issues by type</div><div id="type-bars"><div class="loading">Loading...</div></div></div>
+
+<div class="table-card">
+  <div class="chart-title">Overdue issues — open over 48 hours</div>
+  <div class="table-header">
+    <div class="th">ID</div><div class="th">Store</div><div class="th">Department</div><div class="th">Issue type</div><div class="th">Status</div>
+  </div>
+  <div id="overdue-table"><div class="loading">Loading...</div></div>
+</div>
+
+<script>
+const SITE = 'https://uscgcsc.sharepoint.com/sites/FrustratedFreightGroup';
+const LIST = 'Frustrated Freight Log';
+const COLORS = ['#378ADD','#7F77DD','#1D9E75','#EF9F27','#E24B4A','#D4537E','#639922','#5DCAA5','#BA7517','#533AB7'];
+
+function makeBars(containerId, data) {
+  const el = document.getElementById(containerId);
+  const max = Math.max(...data.map(d=>d.count), 1);
+  el.innerHTML = data.map((d,i)=>`
+    <div class="bar-row">
+      <span class="bar-label" title="${d.label}">${d.label}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.count/max*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+      <span class="bar-count">${d.count}</span>
+    </div>`).join('');
+}
+
+function countBy(items, key) {
+  const map = {};
+  items.forEach(item => {
+    const val = item[key]?.Value || item[key] || 'Unknown';
+    map[val] = (map[val] || 0) + 1;
+  });
+  return Object.entries(map).map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count);
+}
+
+async function loadData() {
+  document.getElementById('last-updated').textContent = 'Refreshing...';
+  try {
+    let allItems = [];
+    let url = `${SITE}/_api/web/lists/getbytitle('${encodeURIComponent(LIST)}')/items?$select=ID,Store,Region,DepartmentNumber,Vendor,IssueType,Status,EmailSentDate,ResolvedDate,FollowUpSent&$top=5000`;
+
+    while (url) {
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json;odata=verbose' },
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allItems = allItems.concat(data.d.results);
+      url = data.d.__next || null;
+    }
+
+    const now = new Date();
+    const total = allItems.length;
+    const resolved = allItems.filter(i => i.Status?.Value === 'Resolved').length;
+    const open = allItems.filter(i => i.Status?.Value !== 'Resolved' && i.Status?.Value !== 'Logged').length;
+    const overdue = allItems.filter(i => {
+      if (i.Status?.Value !== 'Sent') return false;
+      if (!i.EmailSentDate) return false;
+      const sent = new Date(i.EmailSentDate);
+      return (now - sent) / 3600000 > 48;
+    });
+
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-open').textContent = open;
+    document.getElementById('kpi-resolved').textContent = resolved;
+    document.getElementById('kpi-overdue').textContent = overdue.length;
+
+    const statusCounts = {
+      Sent: 0, Logged: 0, 'Store Action Needed': 0,
+      'In Progress': 0, 'Store Responded': 0, Resolved: 0
+    };
+    allItems.forEach(i => {
+      const s = i.Status?.Value;
+      if (s && statusCounts.hasOwnProperty(s)) statusCounts[s]++;
+    });
+    document.getElementById('s-sent').textContent = statusCounts['Sent'];
+    document.getElementById('s-logged').textContent = statusCounts['Logged'];
+    document.getElementById('s-store').textContent = statusCounts['Store Action Needed'];
+    document.getElementById('s-progress').textContent = statusCounts['In Progress'];
+    document.getElementById('s-responded').textContent = statusCounts['Store Responded'];
+    document.getElementById('s-resolved').textContent = statusCounts['Resolved'];
+
+    makeBars('dept-bars', countBy(allItems, 'DepartmentNumber').slice(0,8));
+    makeBars('vendor-bars', countBy(allItems, 'Vendor').slice(0,8));
+    makeBars('type-bars', countBy(allItems, 'IssueType').slice(0,10));
+
+    const tbl = document.getElementById('overdue-table');
+    if (overdue.length === 0) {
+      tbl.innerHTML = '<div class="loading">No overdue issues</div>';
+    } else {
+      tbl.innerHTML = overdue.slice(0,10).map(r=>`
+        <div class="table-row">
+          <div class="td">${r.ID}</div>
+          <div class="td">${r.Store?.Value || '—'}</div>
+          <div class="td">${r.DepartmentNumber?.Value || '—'}</div>
+          <div class="td">${r.IssueType?.Value || '—'}</div>
+          <div class="td"><span class="overdue-badge">Overdue</span></div>
+        </div>`).join('');
+    }
+
+    document.getElementById('last-updated').textContent = 'Updated ' + now.toLocaleTimeString();
+
+  } catch(err) {
+    document.getElementById('last-updated').textContent = 'Error loading data';
+    ['dept-bars','vendor-bars','type-bars','overdue-table'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="error">Could not load data. Make sure this page is embedded in your SharePoint site.</div>`;
+    });
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
